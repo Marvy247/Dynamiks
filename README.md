@@ -1,4 +1,4 @@
-# OptiDot 🔮
+# OptiDot 
 
 **PVM-Powered Autonomous Multi-Chain Yield Maximizer Vault**
 
