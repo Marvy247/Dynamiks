@@ -23,21 +23,37 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const [chainId, setChainId] = useState<number | null>(null);
   const [isConnecting, setIsConnecting] = useState(false);
 
-  const connect = useCallback(async () => {
-    if (!window.ethereum) { alert("Install MetaMask or a Web3 wallet"); return; }
-    setIsConnecting(true);
+  const _setup = useCallback(async (requestAccounts = false) => {
+    const eth = window.ethereum as any;
+    if (!eth) return;
     try {
-      const p = new BrowserProvider(window.ethereum);
-      await p.send("eth_requestAccounts", []);
+      const p = new BrowserProvider(eth);
+      // Check if already connected without prompting
+      const accounts: string[] = requestAccounts
+        ? await p.send("eth_requestAccounts", [])
+        : await p.send("eth_accounts", []);
+      if (accounts.length === 0) return;
       const s = await p.getSigner();
       const net = await p.getNetwork();
       setProvider(p); setSigner(s);
       setAddress(await s.getAddress());
       setChainId(Number(net.chainId));
-    } finally {
-      setIsConnecting(false);
+    } catch (e) {
+      console.error("Wallet setup error:", e);
     }
   }, []);
+
+  // Auto-reconnect on page load if previously connected
+  useEffect(() => {
+    _setup(false);
+  }, [_setup]);
+
+  const connect = useCallback(async () => {
+    if (!window.ethereum) { alert("Install MetaMask or a Web3 wallet"); return; }
+    setIsConnecting(true);
+    try { await _setup(true); }
+    finally { setIsConnecting(false); }
+  }, [_setup]);
 
   const disconnect = useCallback(() => {
     setProvider(null); setSigner(null); setAddress(null); setChainId(null);
@@ -45,13 +61,15 @@ export function WalletProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const eth = window.ethereum as any;
-    if (eth) {
-      eth.on("accountsChanged", (accounts: string[]) => {
-        if (accounts.length === 0) disconnect(); else connect();
-      });
-      eth.on("chainChanged", () => connect());
-    }
-  }, [connect, disconnect]);
+    if (!eth) return;
+    const onAccounts = (accounts: string[]) => {
+      if (accounts.length === 0) disconnect(); else _setup(false);
+    };
+    const onChain = () => _setup(false);
+    eth.on("accountsChanged", onAccounts);
+    eth.on("chainChanged", onChain);
+    return () => { eth.removeListener("accountsChanged", onAccounts); eth.removeListener("chainChanged", onChain); };
+  }, [_setup, disconnect]);
 
   return (
     <WalletContext.Provider value={{ provider, signer, address, chainId, connect, disconnect, isConnecting }}>

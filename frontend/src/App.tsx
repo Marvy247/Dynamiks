@@ -103,6 +103,17 @@ function WalletButton() {
                 className="w-full text-left px-3 py-2 rounded-xl text-sm text-text-dim hover:bg-app-hover transition-colors">
                 📋 Copy address
               </button>
+              <button
+                onClick={async () => {
+                  await (window.ethereum as any).request({
+                    method: 'wallet_watchAsset',
+                    params: { type: 'ERC20', options: { address: '0x241dEDF00F4F7b10E23076F1039cDD874F1C28E0', symbol: 'mDOT', decimals: 10 } },
+                  });
+                  setOpen(false);
+                }}
+                className="w-full text-left px-3 py-2 rounded-xl text-sm text-text-dim hover:bg-app-hover transition-colors">
+                ➕ Add mDOT to MetaMask
+              </button>
               <a href={`https://blockscout-passet-hub.parity-testnet.parity.io/address/${address}`}
                 target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}
                 className="block px-3 py-2 rounded-xl text-sm text-text-dim hover:bg-app-hover transition-colors">
