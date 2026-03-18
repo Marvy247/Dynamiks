@@ -144,10 +144,10 @@ npm run dev
 
 | Contract | Address |
 |---|---|
-| OptiDot | [0xDF445D3B191D7d0D0D31053890bEb1E712d96eCc](https://blockscout-passet-hub.parity-testnet.parity.io/address/0xDF445D3B191D7d0D0D31053890bEb1E712d96eCc) |
-| PVMComputeEngine | [0x696dCC6E2B95D57F954d9fe78eBF0E8B75Ecea65](https://blockscout-passet-hub.parity-testnet.parity.io/address/0x696dCC6E2B95D57F954d9fe78eBF0E8B75Ecea65) |
-| StrategyManager | [0xb08c332E097726c81CBB8aA48D6AEF2Cd67602Bc](https://blockscout-passet-hub.parity-testnet.parity.io/address/0xb08c332E097726c81CBB8aA48D6AEF2Cd67602Bc) |
-| MockDOT | [0x241dEDF00F4F7b10E23076F1039cDD874F1C28E0](https://blockscout-passet-hub.parity-testnet.parity.io/address/0x241dEDF00F4F7b10E23076F1039cDD874F1C28E0) |
+| OptiDot | [0xDF445D3B191D7d0D0D31053890bEb1E712d96eCc](https://blockscout-testnet.polkadot.io/address/0xDF445D3B191D7d0D0D31053890bEb1E712d96eCc) |
+| PVMComputeEngine | [0x696dCC6E2B95D57F954d9fe78eBF0E8B75Ecea65](https://blockscout-testnet.polkadot.io/address/0x696dCC6E2B95D57F954d9fe78eBF0E8B75Ecea65) |
+| StrategyManager | [0xb08c332E097726c81CBB8aA48D6AEF2Cd67602Bc](https://blockscout-testnet.polkadot.io/address/0xb08c332E097726c81CBB8aA48D6AEF2Cd67602Bc) |
+| MockDOT | [0x241dEDF00F4F7b10E23076F1039cDD874F1C28E0](https://blockscout-testnet.polkadot.io/address/0x241dEDF00F4F7b10E23076F1039cDD874F1C28E0) |
 
 ---
 

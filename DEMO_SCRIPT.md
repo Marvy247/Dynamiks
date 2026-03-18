@@ -68,7 +68,7 @@
 
 ## 7. Explorer (15 sec)
 
-- Open: `https://blockscout-passet-hub.parity-testnet.parity.io/address/0xDF445D3B191D7d0D0D31053890bEb1E712d96eCc`
+- Open: `https://blockscout-testnet.polkadot.io/address/0xDF445D3B191D7d0D0D31053890bEb1E712d96eCc`
 - Show the live transactions — deposit and rebalance on-chain
 - "All contracts verified and live on Polkadot Hub TestNet."
 

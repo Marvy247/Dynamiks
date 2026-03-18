@@ -37,7 +37,7 @@ function WalletButton() {
             chainName: 'Polkadot Hub TestNet',
             nativeCurrency: { name: 'PAS', symbol: 'PAS', decimals: 18 },
             rpcUrls: ['https://eth-rpc-testnet.polkadot.io'],
-            blockExplorerUrls: ['https://blockscout-passet-hub.parity-testnet.parity.io'],
+            blockExplorerUrls: ['https://blockscout-testnet.polkadot.io'],
           }],
         });
       } else {
@@ -114,7 +114,7 @@ function WalletButton() {
                 className="w-full text-left px-3 py-2 rounded-xl text-sm text-text-dim hover:bg-app-hover transition-colors">
                 ➕ Add mDOT to MetaMask
               </button>
-              <a href={`https://blockscout-passet-hub.parity-testnet.parity.io/address/${address}`}
+              <a href={`https://blockscout-testnet.polkadot.io/address/${address}`}
                 target="_blank" rel="noopener noreferrer" onClick={() => setOpen(false)}
                 className="block px-3 py-2 rounded-xl text-sm text-text-dim hover:bg-app-hover transition-colors">
                 🔍 View on explorer ↗
