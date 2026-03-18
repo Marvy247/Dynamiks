@@ -1,81 +1,86 @@
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react";
-import { BrowserProvider, JsonRpcSigner } from "ethers";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { BrowserProvider } from "ethers";
+import { CHAIN_ID, RPC_URL } from "../constants";
 
 interface WalletCtx {
-  provider: BrowserProvider | null;
-  signer: JsonRpcSigner | null;
   address: string | null;
-  chainId: number | null;
+  provider: BrowserProvider | null;
+  connecting: boolean;
+  wrongNetwork: boolean;
   connect: () => Promise<void>;
   disconnect: () => void;
-  isConnecting: boolean;
+  switchNetwork: () => Promise<void>;
 }
 
-const WalletContext = createContext<WalletCtx>({
-  provider: null, signer: null, address: null, chainId: null,
-  connect: async () => {}, disconnect: () => {}, isConnecting: false,
+const Ctx = createContext<WalletCtx>({
+  address: null, provider: null, connecting: false, wrongNetwork: false,
+  connect: async () => {}, disconnect: () => {}, switchNetwork: async () => {},
 });
 
-export function WalletProvider({ children }: { children: ReactNode }) {
-  const [provider, setProvider] = useState<BrowserProvider | null>(null);
-  const [signer, setSigner] = useState<JsonRpcSigner | null>(null);
+export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<string | null>(null);
-  const [chainId, setChainId] = useState<number | null>(null);
-  const [isConnecting, setIsConnecting] = useState(false);
+  const [provider, setProvider] = useState<BrowserProvider | null>(null);
+  const [connecting, setConnecting] = useState(false);
+  const [wrongNetwork, setWrongNetwork] = useState(false);
 
-  const _setup = useCallback(async (requestAccounts = false) => {
-    const eth = window.ethereum as any;
+  const checkNetwork = useCallback(async (p: BrowserProvider) => {
+    const net = await p.getNetwork();
+    setWrongNetwork(Number(net.chainId) !== CHAIN_ID);
+  }, []);
+
+  const init = useCallback(async (accounts: string[]) => {
+    if (!accounts.length) { setAddress(null); setProvider(null); return; }
+    const p = new BrowserProvider((window as any).ethereum);
+    setProvider(p);
+    setAddress(accounts[0]);
+    await checkNetwork(p);
+  }, [checkNetwork]);
+
+  useEffect(() => {
+    const eth = (window as any).ethereum;
+    if (!eth) return;
+    eth.request({ method: "eth_accounts" }).then(init);
+    eth.on("accountsChanged", init);
+    eth.on("chainChanged", () => window.location.reload());
+    return () => { eth.removeListener("accountsChanged", init); };
+  }, [init]);
+
+  const connect = async () => {
+    const eth = (window as any).ethereum;
+    if (!eth) { alert("MetaMask not found"); return; }
+    setConnecting(true);
+    try {
+      const accounts = await eth.request({ method: "eth_requestAccounts" });
+      await init(accounts);
+    } finally { setConnecting(false); }
+  };
+
+  const disconnect = () => { setAddress(null); setProvider(null); };
+
+  const switchNetwork = async () => {
+    const eth = (window as any).ethereum;
     if (!eth) return;
     try {
-      const p = new BrowserProvider(eth);
-      // Check if already connected without prompting
-      const accounts: string[] = requestAccounts
-        ? await p.send("eth_requestAccounts", [])
-        : await p.send("eth_accounts", []);
-      if (accounts.length === 0) return;
-      const s = await p.getSigner();
-      const net = await p.getNetwork();
-      setProvider(p); setSigner(s);
-      setAddress(await s.getAddress());
-      setChainId(Number(net.chainId));
-    } catch (e) {
-      console.error("Wallet setup error:", e);
+      await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: `0x${CHAIN_ID.toString(16)}` }] });
+    } catch (e: any) {
+      if (e.code === 4902) {
+        await eth.request({
+          method: "wallet_addEthereumChain",
+          params: [{ chainId: `0x${CHAIN_ID.toString(16)}`, chainName: "Polkadot Hub TestNet",
+            nativeCurrency: { name: "DOT", symbol: "DOT", decimals: 18 },
+            rpcUrls: [RPC_URL],
+            blockExplorerUrls: ["https://blockscout-testnet.polkadot.io"],
+          }],
+        });
+      }
     }
-  }, []);
-
-  // Auto-reconnect on page load if previously connected
-  useEffect(() => {
-    _setup(false);
-  }, [_setup]);
-
-  const connect = useCallback(async () => {
-    if (!window.ethereum) { alert("Install MetaMask or a Web3 wallet"); return; }
-    setIsConnecting(true);
-    try { await _setup(true); }
-    finally { setIsConnecting(false); }
-  }, [_setup]);
-
-  const disconnect = useCallback(() => {
-    setProvider(null); setSigner(null); setAddress(null); setChainId(null);
-  }, []);
-
-  useEffect(() => {
-    const eth = window.ethereum as any;
-    if (!eth) return;
-    const onAccounts = (accounts: string[]) => {
-      if (accounts.length === 0) disconnect(); else _setup(false);
-    };
-    const onChain = () => _setup(false);
-    eth.on("accountsChanged", onAccounts);
-    eth.on("chainChanged", onChain);
-    return () => { eth.removeListener("accountsChanged", onAccounts); eth.removeListener("chainChanged", onChain); };
-  }, [_setup, disconnect]);
+  };
 
   return (
-    <WalletContext.Provider value={{ provider, signer, address, chainId, connect, disconnect, isConnecting }}>
+    <Ctx.Provider value={{ address, provider, connecting, wrongNetwork, connect, disconnect, switchNetwork }}>
       {children}
-    </WalletContext.Provider>
+    </Ctx.Provider>
   );
 }
 
-export const useWallet = () => useContext(WalletContext);
+export const useWallet = () => useContext(Ctx);

@@ -18,9 +18,9 @@ interface IGovernancePrecompile {
     function vote(uint32 refIndex, bool aye, uint256 balance) external returns (bool);
 }
 
-interface IPVMCompute {
-    function monteCarloSimulate(uint64[] calldata strategies, uint64 paths, uint64 seed) external view returns (uint64 bestIndex);
-    function geneticOptimize(int64[] calldata returns_, int64[] calldata risks, uint64 generations, uint64 seed) external view returns (uint64 packedWeights);
-    function computeSharpe(int64[] calldata returns_, int64[] calldata risks) external pure returns (int64);
-    function computeVaR(int64[] calldata returns_, uint64 confidenceScaled) external pure returns (int64);
+interface IPVMArena {
+    function geneticEvolve(uint64 popSize, uint64 generations, uint64 battlePaths, uint64 seed) external view returns (uint64 packedWinner);
+    function monteCarloTournament(uint64[] calldata agentGenes, uint64 paths, uint64 seed) external view returns (uint64 winnerIndex);
+    function astarPathfind(uint64 mapSeed, uint64 gridSize, uint64 sx, uint64 sy, uint64 gx, uint64 gy) external view returns (uint64 pathLength);
+    function computeAgentPower(uint64 packedGenes, int64[] calldata battleHistory) external view returns (int64 power);
 }

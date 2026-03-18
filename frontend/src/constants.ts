@@ -1,41 +1,64 @@
-// Deployed on Polkadot Hub TestNet (Chain ID: 420420417)
-export const VAULT_ADDRESS = "0xDF445D3B191D7d0D0D31053890bEb1E712d96eCc";
-export const COMPUTE_ADDRESS = "0x696dCC6E2B95D57F954d9fe78eBF0E8B75Ecea65";
-export const DOT_ADDRESS = "0x241dEDF00F4F7b10E23076F1039cDD874F1C28E0"; // MockDOT
+// Contract addresses — update after deployment
+export const CONTRACTS = {
+  mockDOT:        "0xf1919E7a4F179778082845e347B854e446E16e48",
+  pvmBattleEngine:"0x07B15f39637976C416983B57D723099655747335",
+  arenaManager:   "0xc193e2BC9f29F2932f98839bB5A4cB7a6483fF59",
+  agentNFT:       "0xd498EF9Cbf003D19C69AeE5B02A8E53e02E264e2",
+} as const;
 
-export const POLKADOT_HUB_CHAIN_ID = 420420417;
+export const CHAIN_ID = 420420417;
+export const RPC_URL  = "https://eth-rpc-testnet.polkadot.io";
+export const EXPLORER = "https://blockscout-testnet.polkadot.io";
+export const DOT_DECIMALS = 10;
 
-export const VAULT_ABI = [
-  "function deposit(uint256 assets, address receiver) returns (uint256 shares)",
-  "function redeem(uint256 shares, address receiver, address owner) returns (uint256 assets)",
-  "function withdraw(uint256 assets, address receiver, address owner) returns (uint256 shares)",
-  "function rebalance() external",
-  "function totalAssets() view returns (uint256)",
-  "function balanceOf(address) view returns (uint256)",
-  "function convertToAssets(uint256 shares) view returns (uint256)",
-  "function convertToShares(uint256 assets) view returns (uint256)",
-  "function estimatedAPY() view returns (uint256)",
-  "function getLatestMetrics() view returns (int64 sharpe, int64 var95, uint64 bestStrategy, uint256 ts)",
-  "function getRebalanceHistoryLength() view returns (uint256)",
-  "function rebalanceHistory(uint256) view returns (uint256 timestamp, uint64 bestStrategyIndex, uint64 packedWeights, int64 sharpeRatio, int64 valueAtRisk, uint256 totalAssets_)",
-  "function lastRebalance() view returns (uint256)",
-  "function rebalanceCooldown() view returns (uint256)",
-  "function asset() view returns (address)",
-  "event Rebalanced(uint64 indexed bestStrategy, uint64 packedWeights, int64 sharpe, int64 var95, uint256 totalAssets)",
+export const ARENA_MANAGER_ABI = [
+  "function createArena(string,uint64,uint64,uint256,uint32) returns (uint256)",
+  "function joinArena(uint256,uint64) payable",
+  "function startTournament(uint256) returns (uint256)",
+  "function finalizeTournament(uint256,address)",
+  "function getArenaPlayers(uint256) view returns (address[])",
+  "function getArenaCount() view returns (uint256)",
+  "function getTournamentCount() view returns (uint256)",
+  "function arenas(uint256) view returns (uint64,uint64,uint256,uint256,uint32,uint32,bool,string)",
+  "function tournaments(uint256) view returns (uint256,uint64,uint32,uint32,bool,address,uint256)",
+  "function playerAgents(uint256,address) view returns (uint64)",
+  "function playerWins(address) view returns (uint256)",
+  "event ArenaCreated(uint256 indexed,string,uint256)",
+  "event PlayerJoined(uint256 indexed,address indexed,uint64)",
+  "event TournamentStarted(uint256 indexed,uint256 indexed)",
+  "event TournamentFinalized(uint256 indexed,address indexed,uint256)",
 ] as const;
 
-export const ERC20_ABI = [
-  "function approve(address spender, uint256 amount) returns (bool)",
-  "function allowance(address owner, address spender) view returns (uint256)",
+export const PVM_ENGINE_ABI = [
+  "function geneticEvolve(uint64,uint64,uint64,uint64) view returns (uint64)",
+  "function monteCarloTournament(uint64[],uint64,uint64) view returns (uint64)",
+  "function astarPathfind(uint64,uint64,uint64,uint64,uint64,uint64) view returns (uint64)",
+  "function computeAgentPower(uint64,int64[]) view returns (int64)",
+  "function pvmAvailable() view returns (bool)",
+] as const;
+
+export const AGENT_NFT_ABI = [
+  "function mintChampion(address,uint64,uint256,string) returns (uint256)",
+  "function tokenURI(uint256) view returns (string)",
+  "function totalSupply() view returns (uint256)",
+  "function getAgentWins(uint256) view returns (uint256)",
+  "function ownerOf(uint256) view returns (address)",
   "function balanceOf(address) view returns (uint256)",
+] as const;
+
+export const MOCK_DOT_ABI = [
+  "function balanceOf(address) view returns (uint256)",
+  "function approve(address,uint256) returns (bool)",
+  "function allowance(address,address) view returns (uint256)",
+  "function faucet()",
   "function decimals() view returns (uint8)",
-  "function symbol() view returns (string)",
 ] as const;
 
-export const STRATEGY_NAMES = [
-  "HydraDX Stablecoin LP",
-  "Astar DEX USDC/DOT",
-  "Moonbeam Lending",
-  "Bifrost vDOT Staking",
-  "Interlay iBTC Vault",
-];
+export const GENE_LABELS = ["Attack", "Defense", "Speed", "Adaptability"] as const;
+
+export const PARACHAINS = [
+  { id: 2034, name: "HydraDX" },
+  { id: 2006, name: "Astar" },
+  { id: 2004, name: "Moonbeam" },
+  { id: 2001, name: "Bifrost" },
+] as const;

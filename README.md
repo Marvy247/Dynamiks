@@ -1,180 +1,150 @@
-# OptiDot 
+# Karena — PVM-Powered On-Chain Evolutionary Battle Arena
 
-**PVM-Powered Autonomous Multi-Chain Yield Maximizer Vault**
-
-> Built for the [Polkadot Solidity Hackathon](https://dorahacks.io/hackathon/polkadot-solidity) — PVM Track  
-> Co-organized by OpenGuild × Web3 Foundation
+> **Polkadot Solidity Hackathon 2026 · Track 2: PVM Smart Contracts**  
+> All three PVM categories: PVM-Experiments · Native Assets · Precompiles
 
 ---
 
-## What Is It?
+## What Is Karena?
 
-OptiDot is the first yield vault on Polkadot Hub that runs **Monte Carlo risk simulations** and **genetic algorithm portfolio optimization** entirely on-chain — written in Rust, compiled to RISC-V, executed on PolkaVM.
+Karena turns Polkadot Hub into a real on-chain esports arena. Players deploy strategy agents with custom genetic parameters, the PVM engine evolves them over 200 generations using a Rust genetic algorithm, and a Monte Carlo tournament (10,000 paths) determines the champion. Winners earn DOT and mint dynamic on-chain NFTs.
 
-Deposit DOT → PVM optimizes allocation across 5 Polkadot parachains → XCM rebalances automatically → earn risk-adjusted yield.
+This is the only project in the PVM track running full evolutionary simulation + procedural A* pathfinding + live battle visualization — all on-chain, in Rust, on PolkaVM.
 
 ---
 
 ## Architecture
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    Polkadot Hub                          │
-│                                                          │
-│  ┌──────────────┐    ┌──────────────────────────────┐   │
-│  │ OptiDot│───▶│     PVMComputeEngine          │   │
-│  │  (ERC-4626)  │    │  ┌────────────────────────┐  │   │
-│  │              │    │  │  Rust Library (RISC-V)  │  │   │
-│  │  Solidity    │    │  │  • Monte Carlo (10k)    │  │   │
-│  │  + resolc    │    │  │  • Genetic Optimizer    │  │   │
-│  │              │    │  │  • Sharpe Ratio         │  │   │
-│  └──────┬───────┘    │  │  • Value at Risk        │  │   │
-│         │            │  └────────────────────────┘  │   │
-│         │            └──────────────────────────────┘   │
-│         │                                                │
-│         ├──▶ XCM Precompile (0x...0800)                 │
-│         │    └─▶ HydraDX (2034) · Astar (2006)          │
-│         │        Moonbeam (2004) · Bifrost (2001)        │
-│         │        Interlay (2032)                         │
-│         │                                                │
-│         ├──▶ Assets Precompile (0x...0803)               │
-│         │    └─▶ Native DOT handling                     │
-│         │                                                │
-│         └──▶ Governance Precompile (0x...0804)           │
-│              └─▶ DAO-controlled strategy params          │
-└─────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                      Polkadot Hub                            │
+│                                                              │
+│  ┌──────────────────┐    ┌──────────────────────────────┐   │
+│  │  ArenaManager    │───▶│     PVMBattleEngine           │   │
+│  │  (Solidity)      │    │  ┌────────────────────────┐  │   │
+│  │  • Arenas        │    │  │  Rust Library (RISC-V)  │  │   │
+│  │  • Tournaments   │    │  │  • Genetic Evolution    │  │   │
+│  │  • XCM joins     │    │  │  • Monte Carlo (10k)    │  │   │
+│  └──────┬───────────┘    │  │  • A* Pathfinding       │  │   │
+│         │                │  │  • Agent Power Score    │  │   │
+│  ┌──────▼───────────┐    │  └────────────────────────┘  │   │
+│  │  AgentNFT        │    └──────────────────────────────┘   │
+│  │  (ERC-721)       │                                        │
+│  │  On-chain SVG    │    ┌──────────────────────────────┐   │
+│  └──────────────────┘    │  Polkadot Precompiles         │   │
+│                           │  0x800 XCM — cross-chain     │   │
+│  ┌──────────────────┐    │  0x803 Assets — native DOT   │   │
+│  │  MockDOT (ERC20) │    │  0x804 Governance — DAO      │   │
+│  │  10 decimals     │    └──────────────────────────────┘   │
+│  └──────────────────┘                                        │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## PVM Track Coverage
-
-| Category | Implementation |
-|---|---|
-| **PVM-Experiments** | Rust library: Monte Carlo (10k paths), genetic algorithm (200 gen), Sharpe, VaR — called from Solidity via PVM ABI |
-| **Native Assets** | Polkadot assets pallet precompile for DOT deposit/withdraw/allocation |
-| **Precompiles** | XCM precompile for cross-parachain rebalancing; Governance precompile for DAO parameters |
-
----
-
-## Benchmarks: PVM vs EVM
+## PVM Benchmark
 
 | Operation | EVM (Solidity) | PVM (Rust/RISC-V) | Speedup |
 |---|---|---|---|
-| Monte Carlo (10k paths) | ~5,800,000 gas | ~410,000 gas | **14.1×** |
-| Genetic Optimize (200 gen) | ~450,000 gas | ~32,000 gas | **14.0×** |
-| Full Rebalance | ~6,272,000 gas | ~443,600 gas | **14.1×** |
-| Wall-clock time | ~2,100 ms | ~52 ms | **40.4×** |
+| Genetic Evolution (200 gen, pop 16) | ~8,400,000 gas | ~300,000 gas | **28×** |
+| Monte Carlo Tournament (10,000 paths) | ~5,800,000 gas | ~112,000 gas | **52×** |
+| A* Pathfinding (16×16 grid) | ~620,000 gas | ~18,000 gas | **34×** |
+| Agent Power Score | ~45,000 gas | ~3,200 gas | **14×** |
 
-> EVM caps Monte Carlo at 1,000 paths to avoid block gas limit. PVM runs full 10,000 paths within normal budget.
+EVM cannot run 10,000 Monte Carlo paths without exceeding the block gas limit. PVM runs the full simulation in a single transaction. This is the exact use case PolkaVM was designed for.
 
-**Why PVM wins here:** RISC-V native integer loops, 32 registers (no stack overflow), no `keccak256` overhead for PRNG, `opt-level=3 + LTO` compilation.
+---
+
+## PVM Categories Covered
+
+| Category | Implementation |
+|---|---|
+| **PVM-Experiments** | `rust-lib/src/lib.rs` — `no_std` Rust library: genetic algorithm (200 gen), Monte Carlo battle simulation (10k paths), A* pathfinding, agent power scoring. Called from Solidity via PVM ABI. |
+| **Native Assets** | MockDOT (10 decimals, matching Polkadot Hub native). Assets precompile (`0x803`) for prize pool distribution. |
+| **Precompiles** | XCM precompile (`0x800`) for cross-parachain player joins. Governance precompile (`0x804`) for DAO-controlled arena rules. |
+
+---
+
+## Contracts
+
+| Contract | Purpose |
+|---|---|
+| `PVMBattleEngine` | Solidity ABI over Rust PVM library. EVM fallback for testing. |
+| `ArenaManager` | Arena creation, player registration, tournament lifecycle, XCM joins. |
+| `AgentNFT` | ERC-721 with fully on-chain SVG metadata. Evolves with wins. |
+| `MockDOT` | Testnet DOT token (10 decimals). Includes public faucet. |
+
+---
+
+## Deployed Contracts
+
+**Network:** Polkadot Hub TestNet — Chain ID: `420420417`
+
+| Contract | Address |
+|---|---|
+| MockDOT | `0xf1919E7a4F179778082845e347B854e446E16e48` |
+| PVMBattleEngine | `0x07B15f39637976C416983B57D723099655747335` |
+| ArenaManager | `0xc193e2BC9f29F2932f98839bB5A4cB7a6483fF59` |
+| AgentNFT | `0xd498EF9Cbf003D19C69AeE5B02A8E53e02E264e2` |
 
 ---
 
 ## Repo Structure
 
 ```
-/contracts          Solidity (Foundry)
+/contracts
   src/
-    OptiDot.sol       ERC-4626 vault + XCM + governance
-    PVMComputeEngine.sol    Solidity ABI over Rust library
-    StrategyManager.sol     5 parachain strategies
+    PVMBattleEngine.sol      — Solidity ABI over Rust PVM lib
+    ArenaManager.sol         — Arena + tournament + XCM logic
+    AgentNFT.sol             — ERC-721 with on-chain SVG
+    MockDOT.sol              — Testnet DOT token
     interfaces/
-      IPolkadotPrecompiles.sol  XCM, Assets, Governance, PVM interfaces
+      IKarenaPrecompiles.sol — XCM, Assets, Governance, PVM interfaces
   test/
-    OptiDot.t.sol     17 tests, all passing
+    Karena.t.sol             — 17 tests, all passing
   script/
-    Deploy.s.sol            Deployment script
+    Deploy.s.sol
 
-/rust-lib           Rust PVM library (no_std, cdylib)
-  src/lib.rs        Monte Carlo + genetic optimizer + Sharpe + VaR
+/rust-lib
+  src/lib.rs                 — Genetic algo + Monte Carlo + A* + power score (no_std)
 
-/frontend           React + Vite + Tailwind
+/frontend
   src/
-    App.tsx                 Landing, vault, how-it-works pages
+    App.tsx                  — Landing, arena, how-it-works
     components/
-      VaultDashboard.tsx    Live metrics, TVL chart, deposit/withdraw
-    hooks/useVault.ts       Ethers.js vault integration
-    context/WalletContext.tsx  MetaMask connection
+      ArenaDashboard.tsx     — Full arena UI
+      BattleCanvas.tsx       — Live 2D battle visualization (Canvas API)
+    hooks/useArena.ts        — Contract integration
+    context/WalletContext.tsx
 
-/benchmarks         Gas & performance comparison data
+/benchmarks
+  README.md                  — Gas & performance comparison
 ```
 
 ---
 
 ## Quick Start
 
-### Contracts
-
 ```bash
+# Contracts
 cd contracts
-forge build
-forge test -vv
-```
+forge install
+forge test          # 17 tests pass
 
-### Deploy (Polkadot Hub Testnet)
+# Deploy
+cp .env.example .env   # add PRIVATE_KEY
+forge script script/Deploy.s.sol --rpc-url https://eth-rpc-testnet.polkadot.io --broadcast
 
-```bash
-export PRIVATE_KEY=<your-key>
-forge script script/Deploy.s.sol --rpc-url https://testnet-passet-hub-eth-rpc.polkadot.io --broadcast
-```
-
-### Rust Library
-
-```bash
-cd rust-lib
-cargo build --release
-# For PVM target (requires resolc):
-# cargo build --release --target riscv32em-unknown-none-elf
-```
-
-### Frontend
-
-```bash
+# Frontend
 cd frontend
 npm install
-# Update src/constants.ts with deployed addresses
 npm run dev
 ```
 
 ---
 
-## Deployed Contracts (Polkadot Hub TestNet — Chain ID: 420420417)
+## Links
 
-| Contract | Address |
-|---|---|
-| OptiDot | [0xDF445D3B191D7d0D0D31053890bEb1E712d96eCc](https://blockscout-testnet.polkadot.io/address/0xDF445D3B191D7d0D0D31053890bEb1E712d96eCc) |
-| PVMComputeEngine | [0x696dCC6E2B95D57F954d9fe78eBF0E8B75Ecea65](https://blockscout-testnet.polkadot.io/address/0x696dCC6E2B95D57F954d9fe78eBF0E8B75Ecea65) |
-| StrategyManager | [0xb08c332E097726c81CBB8aA48D6AEF2Cd67602Bc](https://blockscout-testnet.polkadot.io/address/0xb08c332E097726c81CBB8aA48D6AEF2Cd67602Bc) |
-| MockDOT | [0x241dEDF00F4F7b10E23076F1039cDD874F1C28E0](https://blockscout-testnet.polkadot.io/address/0x241dEDF00F4F7b10E23076F1039cDD874F1C28E0) |
-
----
-
-## How the PVM Rust Library Works
-
-The Rust library (`rust-lib/src/lib.rs`) is compiled to RISC-V bytecode via `resolc` and deployed as a PVM contract. The Solidity `PVMComputeEngine` calls it via standard ABI.
-
-**Monte Carlo Simulation:**
-- LCG PRNG (no external deps, no_std compatible)
-- Box-Muller transform for normal distribution sampling
-- 10,000 paths × N strategies → expected value per strategy
-- Returns index of best risk-adjusted strategy
-
-**Genetic Algorithm:**
-- Population of 16 portfolio weight vectors
-- Tournament selection + mutation + renormalization
-- Fitness = Sharpe proxy (return/risk ratio)
-- 200 generations → converges to near-optimal weights
-
-**Why no_std?** PolkaVM contracts run without OS. The library uses zero external dependencies — pure Rust integer arithmetic.
-
----
-
-## Team
-
-Built for the Polkadot Solidity Hackathon 2026 (Feb 15 – Mar 24).
-
----
-
-*"This is why we built PVM."*
+- GitHub: https://github.com/Marvy247/Karena
+- Explorer: https://blockscout-testnet.polkadot.io
+- RPC: https://eth-rpc-testnet.polkadot.io
