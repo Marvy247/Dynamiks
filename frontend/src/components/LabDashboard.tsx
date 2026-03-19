@@ -1,9 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
+import { BrowserProvider, Contract } from "ethers";
 import { useWallet } from "../context/WalletContext";
 import PhysicsCanvas, { type SimMode } from "./PhysicsCanvas";
-import { SIM_TYPES, SIM_COLORS, EXPLORER, CONTRACTS } from "../constants";
+import { SIM_TYPES, SIM_COLORS, EXPLORER, CONTRACTS, SIM_LAB_ABI, SIM_NFT_ABI } from "../constants";
+
+const TOAST_STYLE = { style: { background: "#1f2937", color: "#fff", fontFamily: "monospace" } };
 
 const MODE_KEYS: SimMode[] = ["nbody", "particles", "rigid", "wave"];
 
@@ -34,10 +37,13 @@ export default function LabDashboard() {
   const [energy, setEnergy] = useState(0);
   const [bodyCount, setBodyCount] = useState(0);
   const [credits] = useState(10000);
+  const labIdRef = useRef<bigint | null>(null);
+  const stateRef = useRef<number[]>([]);
 
   const handleStateChange = useCallback((bodies: number[], e: number) => {
     setEnergy(e);
     setBodyCount(bodies.length / 5);
+    stateRef.current = bodies;
   }, []);
 
   const handleModeChange = (m: SimMode) => {
@@ -45,14 +51,72 @@ export default function LabDashboard() {
     setTimeout(() => { setMode(m); setRunning(true); }, 100);
   };
 
-  const handleSave = () => {
-    if (!address) { toast.error("Connect wallet to save"); return; }
-    toast.success("Snapshot saved on-chain!");
+  const getSigner = async () => {
+    const provider = new BrowserProvider((window as any).ethereum);
+    return provider.getSigner();
   };
 
-  const handleMintNFT = () => {
-    if (!address) { toast.error("Connect wallet to mint"); return; }
-    toast.success("NFT minted! Check your wallet.");
+  const ensureLab = async (signer: Awaited<ReturnType<typeof getSigner>>) => {
+    if (labIdRef.current !== null) return labIdRef.current;
+    const lab = new Contract(CONTRACTS.simLab, SIM_LAB_ABI, signer);
+    const simTypeIndex = MODE_KEYS.indexOf(mode);
+    const tx = await lab.createLab("My Lab", simTypeIndex, 100, 9810000, 1000000, [], false);
+    const receipt = await tx.wait();
+    // parse LabCreated event for labId
+    const iface = lab.interface;
+    for (const log of receipt.logs) {
+      try {
+        const parsed = iface.parseLog(log);
+        if (parsed?.name === "LabCreated") {
+          labIdRef.current = parsed.args[0];
+          return labIdRef.current;
+        }
+      } catch {}
+    }
+    // fallback: use getLabCount - 1
+    const count: bigint = await lab.getLabCount();
+    labIdRef.current = count - 1n;
+    return labIdRef.current;
+  };
+
+  const handleSave = async () => {
+    if (!address) { toast.error("Connect wallet first", TOAST_STYLE); return; }
+    const t = toast.loading("Saving snapshot…", TOAST_STYLE);
+    try {
+      const signer = await getSigner();
+      const labId = await ensureLab(signer);
+      const lab = new Contract(CONTRACTS.simLab, SIM_LAB_ABI, signer);
+      const state = stateRef.current.slice(0, 30).map(v => BigInt(Math.round(v)));
+      const tx = await lab.saveSnapshot(labId, state);
+      await tx.wait();
+      toast.success("Snapshot saved on-chain!", { id: t, ...TOAST_STYLE });
+    } catch (e: any) {
+      toast.error(e?.shortMessage ?? e?.message ?? "Transaction failed", { id: t, ...TOAST_STYLE });
+    }
+  };
+
+  const handleMintNFT = async () => {
+    if (!address) { toast.error("Connect wallet first", TOAST_STYLE); return; }
+    const t = toast.loading("Minting NFT…", TOAST_STYLE);
+    try {
+      const signer = await getSigner();
+      const labId = await ensureLab(signer);
+      const nft = new Contract(CONTRACTS.simNFT, SIM_NFT_ABI, signer);
+      const simTypeIndex = MODE_KEYS.indexOf(mode);
+      const tx = await nft.mint(
+        address,
+        labId,
+        simTypeIndex,
+        BigInt(Math.round(energy * 1_000_000)),
+        BigInt(Math.round(gravity * 1_000_000)),
+        BigInt(Math.round(restitution * 1_000_000)),
+        SIM_TYPES[simTypeIndex]
+      );
+      await tx.wait();
+      toast.success("NFT minted! Check your wallet.", { id: t, ...TOAST_STYLE });
+    } catch (e: any) {
+      toast.error(e?.shortMessage ?? e?.message ?? "Transaction failed", { id: t, ...TOAST_STYLE });
+    }
   };
 
   if (wrongNetwork) {
