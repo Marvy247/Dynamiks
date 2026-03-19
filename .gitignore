@@ -2,9 +2,11 @@
 contracts/out/
 contracts/cache/
 contracts/.env
+contracts/broadcast/
 
 # Rust
 rust-lib/target/
+rust-physics/target/
 
 # Frontend
 frontend/node_modules/
