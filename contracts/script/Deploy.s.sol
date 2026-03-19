@@ -3,37 +3,30 @@ pragma solidity ^0.8.20;
 
 import "forge-std/Script.sol";
 import "../src/MockDOT.sol";
-import "../src/PVMBattleEngine.sol";
-import "../src/ArenaManager.sol";
-import "../src/AgentNFT.sol";
+import "../src/PVMPhysicsEngine.sol";
+import "../src/SimLab.sol";
+import "../src/SimNFT.sol";
 
-contract DeployKarena is Script {
+contract DeployDynamiks is Script {
     function run() external {
         uint256 pk = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(pk);
 
         MockDOT dot = new MockDOT();
-        PVMBattleEngine engine = new PVMBattleEngine();
-        ArenaManager arenaManager = new ArenaManager();
-        AgentNFT agentNFT = new AgentNFT();
+        PVMPhysicsEngine engine = new PVMPhysicsEngine();
+        SimLab lab = new SimLab();
+        SimNFT nft = new SimNFT();
 
-        // Authorize ArenaManager to mint NFTs
-        agentNFT.setMinter(address(arenaManager), true);
+        nft.setMinter(address(lab), true);
 
-        // Create the first arena
-        arenaManager.createArena(
-            "Neon Colosseum",
-            uint64(block.timestamp),
-            16,          // 16x16 grid
-            0,           // free entry for demo
-            16           // max 16 players
-        );
+        // Seed the lab with 10k credits for demo
+        lab.grantCredits(vm.addr(pk), 100_000);
 
         vm.stopBroadcast();
 
-        console.log("MockDOT:       ", address(dot));
-        console.log("PVMBattleEngine:", address(engine));
-        console.log("ArenaManager:  ", address(arenaManager));
-        console.log("AgentNFT:      ", address(agentNFT));
+        console.log("MockDOT:          ", address(dot));
+        console.log("PVMPhysicsEngine: ", address(engine));
+        console.log("SimLab:           ", address(lab));
+        console.log("SimNFT:           ", address(nft));
     }
 }

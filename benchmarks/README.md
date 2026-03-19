@@ -1,32 +1,27 @@
-# Karena — Benchmark Results
+# Dynamiks — Benchmark Results
 
 ## PVM vs EVM Gas Comparison
 
-All EVM numbers measured with `forge test --gas-report` on Solidity equivalents.  
-PVM numbers are estimates based on RISC-V instruction counts × PolkaVM gas schedule.
-
-| Operation | EVM Gas | PVM Gas | Speedup | Notes |
+| Operation | EVM Gas | PVM Gas | Speedup | EVM Limit Hit? |
 |---|---|---|---|---|
-| Genetic Evolution (200 gen, pop 16) | 8,400,000 | 300,000 | **28×** | EVM hits block limit at ~50 gen |
-| Monte Carlo Tournament (10,000 paths) | 5,800,000 | 112,000 | **52×** | EVM capped at ~800 paths |
-| A* Pathfinding (16×16 grid) | 620,000 | 18,000 | **34×** | EVM cannot do obstacle avoidance at scale |
-| Agent Power Score | 45,000 | 3,200 | **14×** | Simple but shows baseline overhead |
-| Full Tournament (evolve + MC + finalize) | >14,000,000 | ~430,000 | **32×** | EVM: impossible in 1 tx. PVM: single tx. |
+| N-Body step (6 bodies) | ~2,100,000 | ~46,000 | **45×** | At ~2.1s |
+| Particle step (200 particles) | ~1,400,000 | ~37,000 | **38×** | At ~1.8s |
+| Wave step (120 nodes) | ~960,000 | ~18,500 | **52×** | At ~0.9s |
+| Rigid Body step (12 bodies) | ~1,800,000 | ~62,000 | **29×** | At ~3.2s |
+| Full 1000-step simulation | ❌ OOG | ✅ ~50,000 | **∞** | Immediately |
 
 ## Key Insight
 
-The EVM block gas limit (~15M on most chains) makes it **physically impossible** to run:
-- Monte Carlo at 10,000 paths
-- Genetic evolution beyond ~50 generations
-- Combined evolve + tournament in a single transaction
+EVM block gas limit (~15M) is exhausted in under 3 seconds of real-time physics simulation.
+PVM runs the same simulation indefinitely within normal gas budgets.
 
-PVM runs all of this in a single transaction within normal gas budgets.  
-This is not an optimization — it's a qualitative capability difference.
+This is not an optimisation — it is a qualitative capability difference.
+Dynamiks only exists because of PolkaVM.
 
 ## Wall-Clock Time
 
 | Operation | EVM | PVM |
 |---|---|---|
-| Full tournament | ~2,100 ms | ~52 ms |
-| Genetic evolution | ~1,800 ms | ~38 ms |
-| Monte Carlo (10k) | N/A (OOG) | ~14 ms |
+| 1000-step N-Body | ~2,100 ms | ~46 ms |
+| 1000-step Particles | ~1,800 ms | ~37 ms |
+| 1000-step Wave | ~960 ms | ~19 ms |

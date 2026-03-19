@@ -31,8 +31,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const init = useCallback(async (accounts: string[]) => {
     if (!accounts.length) { setAddress(null); setProvider(null); return; }
     const p = new BrowserProvider((window as any).ethereum);
-    setProvider(p);
-    setAddress(accounts[0]);
+    setProvider(p); setAddress(accounts[0]);
     await checkNetwork(p);
   }, [checkNetwork]);
 
@@ -49,10 +48,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     const eth = (window as any).ethereum;
     if (!eth) { alert("MetaMask not found"); return; }
     setConnecting(true);
-    try {
-      const accounts = await eth.request({ method: "eth_requestAccounts" });
-      await init(accounts);
-    } finally { setConnecting(false); }
+    try { await init(await eth.request({ method: "eth_requestAccounts" })); }
+    finally { setConnecting(false); }
   };
 
   const disconnect = () => { setAddress(null); setProvider(null); };
@@ -63,16 +60,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     try {
       await eth.request({ method: "wallet_switchEthereumChain", params: [{ chainId: `0x${CHAIN_ID.toString(16)}` }] });
     } catch (e: any) {
-      if (e.code === 4902) {
-        await eth.request({
-          method: "wallet_addEthereumChain",
-          params: [{ chainId: `0x${CHAIN_ID.toString(16)}`, chainName: "Polkadot Hub TestNet",
-            nativeCurrency: { name: "DOT", symbol: "DOT", decimals: 18 },
-            rpcUrls: [RPC_URL],
-            blockExplorerUrls: ["https://blockscout-testnet.polkadot.io"],
-          }],
-        });
-      }
+      if (e.code === 4902) await eth.request({
+        method: "wallet_addEthereumChain",
+        params: [{ chainId: `0x${CHAIN_ID.toString(16)}`, chainName: "Polkadot Hub TestNet",
+          nativeCurrency: { name: "DOT", symbol: "DOT", decimals: 18 },
+          rpcUrls: [RPC_URL], blockExplorerUrls: ["https://blockscout-testnet.polkadot.io"] }],
+      });
     }
   };
 
