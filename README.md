@@ -99,10 +99,10 @@ This is not an optimisation. It is a qualitative capability difference. Dynamiks
 
 | Contract | Address |
 |---|---|
-| MockDOT | `[deploy address]` |
-| PVMPhysicsEngine | `[deploy address]` |
-| SimLab | `[deploy address]` |
-| SimNFT | `[deploy address]` |
+| MockDOT | [`0x921122bC886E537549072c6F3A591e6BD7957914`](https://blockscout-testnet.polkadot.io/address/0x921122bC886E537549072c6F3A591e6BD7957914) |
+| PVMPhysicsEngine | [`0x78D7a2102725A7715153fD71E47C3284222422f6`](https://blockscout-testnet.polkadot.io/address/0x78D7a2102725A7715153fD71E47C3284222422f6) |
+| SimLab | [`0x006a2d1030BCd6CaBD41cE90f244A51D5a0C1a3E`](https://blockscout-testnet.polkadot.io/address/0x006a2d1030BCd6CaBD41cE90f244A51D5a0C1a3E) |
+| SimNFT | [`0x5D3315CF2fb6D4E0222A65231352dd4402A40306`](https://blockscout-testnet.polkadot.io/address/0x5D3315CF2fb6D4E0222A65231352dd4402A40306) |
 
 ---
 
