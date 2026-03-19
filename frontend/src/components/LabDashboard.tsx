@@ -107,9 +107,9 @@ export default function LabDashboard() {
         address,
         labId,
         simTypeIndex,
-        BigInt(Math.round(energy * 1_000_000)),
-        BigInt(Math.round(gravity * 1_000_000)),
-        BigInt(Math.round(restitution * 1_000_000)),
+        BigInt(Math.round(Math.min(Math.abs(energy), 9_000_000_000))), // int64-safe, already scaled
+        BigInt(bodyCount),
+        100n,
         SIM_TYPES[simTypeIndex]
       );
       await tx.wait();
